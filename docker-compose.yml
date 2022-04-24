@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  node:
+    build: .
+    container_name: hello-threejs-puppeteer-node
+    # restart: always
+    platform: linux/amd64
+    tty: true
+    ports:
+      - 3000:3000

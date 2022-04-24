@@ -1,0 +1,17 @@
+{
+  "name": "hello-threejs-puppeteer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Yusuke Kawamoto <novogrammer@gmail.com> (https://github.com/novogrammer/)",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.3",
+    "puppeteer": "^13.6.0"
+  }
+}
