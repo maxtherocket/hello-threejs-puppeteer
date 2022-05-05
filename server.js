@@ -23,16 +23,20 @@ async function main() {
   const url = "http://localhost:3000/";
   const API_CAPTURE_URL="/api/capture";
 
+  const args=[
+    "--no-sandbox",
+    "--use-gl=swiftshader",
+    // "--use-gl=angle",
+    "--enable-webgl",
+  ];
+  // const args=[
+  //   '--no-sandbox',
+  //   '--disable-setuid-sandbox',
+  //   '--single-process',
+  // ];
+
   const browser = await puppeteer.launch({
-    args: [
-      "--no-sandbox",
-      "--use-gl=swiftshader",
-      // "--use-gl=angle",
-      "--enable-webgl",
-    ],
-    // args: [
-    //   '--no-sandbox', '--disable-setuid-sandbox', '--single-process',
-    // ],
+    args,
     headless: true,
     dumpio: true,
     defaultViewport: { width: 400, height: 300 },
