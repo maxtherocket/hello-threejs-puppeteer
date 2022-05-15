@@ -53,7 +53,7 @@ async function main() {
 
   // process.kill(process.pid, "SIGINT");
 
-  app.get(API_CAPTURE_URL,async (req,res)=>{
+  app.get(API_CAPTURE_URL, async (req,res)=>{
     const page = await browser.newPage();
 
     await page.goto(url);
@@ -68,8 +68,9 @@ async function main() {
     });
     await page.close();
 
-    const dirPath = `../public/output/${uid}`;
-    fs.mkdirSync(dirPath, { recursive: true });
+    const dirPath = `./public/output/${uid}`;
+    const resolvedDirPath = path.resolve(__dirname, dirPath);
+    fs.mkdirSync(resolvedDirPath, { recursive: true });
 
     const filePaths = results.map((result, i) => {
       const bufData = bufferDataFromBase64(result);
@@ -80,7 +81,7 @@ async function main() {
 
 
 
-    res.json({ok: true});
+    res.json({ok: true, uid: uid, url: `${url}output/${uid}/file000.png`});
 
 
     // res.writeHead(200, {

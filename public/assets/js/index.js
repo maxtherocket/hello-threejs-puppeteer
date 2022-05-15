@@ -104,7 +104,7 @@ class App {
     const result = renderer.domElement.toDataURL();
     if (!this.result) {
       this.result = result;
-      console.log(this.result);
+      // console.log(this.result);
     }
     return result;
   }
@@ -120,7 +120,7 @@ class App {
     const texture = await new Promise((resolve, reject) => {
       const loader = new THREE.TextureLoader();
       loader.load(url, (texture) => {
-        console.log(texture);
+        // console.log(texture);
         resolve(texture);
       })
     });
@@ -133,7 +133,7 @@ class App {
     const myGltf = await new Promise((resolve, reject) => {
       const loader = new GLTFLoader();
       loader.load("/assets/models/my.glb", (gltf) => {
-        console.log(gltf);
+        // console.log(gltf);
         resolve(gltf);
       });
     });
