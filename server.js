@@ -27,6 +27,7 @@ function padNum(num, pad = 3){
 }
 
 console.info('process.env.SPACES_KEY:', process.env.SPACES_KEY);
+console.info('process.env.SPACES_SECRET:', process.env.SPACES_SECRET);
 
 const s3 = new S3Client({
   endpoint: "https://nyc3.digitaloceanspaces.com",
