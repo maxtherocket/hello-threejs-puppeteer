@@ -113,6 +113,7 @@ async function main() {
       const bufData = bufferDataFromBase64(result);
       const filename = `file${padNum(i, 3)}.png`;
       const filePath = `output/${uid}/${filename}`;
+      fs.writeFileSync(path.resolve(__dirname, './public/test.png'), bufData);
       uploadFile(filePath, bufData);
       return filePath;
     });
