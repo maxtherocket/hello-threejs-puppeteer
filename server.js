@@ -195,6 +195,8 @@ async function main() {
     const resolvedDirPath = path.resolve(__dirname, dirPath);
     fs.mkdirSync(resolvedDirPath, { recursive: true });
 
+    fs.mkdirSync(path.resolve('./public/output'), { recursive: true });
+
     const filePaths = results.map((result, i) => {
       const bufData = bufferDataFromBase64(result);
       const filename = `file${padNum(i, 3)}.png`;
