@@ -1,8 +1,10 @@
+require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 const { v4: uuidv4 } = require('uuid');
+const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 const app = express();
 
@@ -23,6 +25,38 @@ function bufferDataFromBase64(result) {
 function padNum(num, pad = 3){
   return String(num).padStart(pad, '0'); // '0009'
 }
+
+const s3 = new S3Client({
+  endpoint: "https://nyc3.digitaloceanspaces.com",
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: process.env.SPACES_KEY,
+    secretAccessKey: process.env.SPACES_SECRET
+  }
+});
+
+// Uploads the specified file to the chosen path.
+const uploadFile = async (filename, content) => {
+  const bucketParams = {
+    Bucket: "threejs-renderer",
+    Key: filename,
+    Body: content,
+    ContentType: 'image/png',
+    ACL: 'public-read'
+  };
+  try {
+    const data = await s3.send(new PutObjectCommand(bucketParams));
+    console.log(
+      "Successfully uploaded object: " +
+      bucketParams.Bucket +
+      "/" +
+      bucketParams.Key
+    );
+    return data;
+  } catch (err) {
+    console.log("Error", err);
+  }
+};
 
 app.listen(3000);
 
@@ -63,7 +97,7 @@ async function main() {
 
     const results = await page.evaluate(async ()=>{
       await window.app.setupPromise;
-      const res = window.app.drawFrames(1);
+      const res = window.app.drawFrames(5);
       return res;
     });
     await page.close();
@@ -72,26 +106,28 @@ async function main() {
     // const resolvedDirPath = path.resolve(__dirname, dirPath);
     // fs.mkdirSync(resolvedDirPath, { recursive: true });
 
-    // const filePaths = results.map((result, i) => {
-    //   const bufData = bufferDataFromBase64(result);
-    //   const filePath = path.resolve(__dirname, dirPath, `file${padNum(i, 3)}.png`);
-    //   fs.writeFileSync(filePath, bufData);
-    //   return filePath;
-    // });
-
-    const bufDataArr = results.map((result, i) => {
+    const filePaths = results.map((result, i) => {
       const bufData = bufferDataFromBase64(result);
-      return bufData;
+      const filename = `file${padNum(i, 3)}.png`;
+      const filePath = `output/${uid}/${filename}`;
+      uploadFile(filePath, bufData);
+      return filePath;
     });
 
-    res.writeHead(200, {
-      'Content-Type': 'image/png',
-      'Content-Length': bufDataArr[0].length
-    });
-    res.end(bufDataArr[0]);
+    // const bufDataArr = results.map((result, i) => {
+    //   const bufData = bufferDataFromBase64(result);
+    //   return bufData;
+    // });
+    //
+    // await uploadFile('test.png', bufDataArr[0]);
+    //
+    // res.writeHead(200, {
+    //   'Content-Type': 'image/png',
+    //   'Content-Length': bufDataArr[0].length
+    // });
+    // res.end(bufDataArr[0]);
 
-
-    //res.json({ok: true, uid: uid, url: `${url}output/${uid}/file000.png`});
+    res.json({ok: true, uid: uid, url: `https://threejs-renderer.nyc3.digitaloceanspaces.com/output/${uid}/file000.png`});
 
   });
   console.log(`begin ${API_CAPTURE_URL}`);

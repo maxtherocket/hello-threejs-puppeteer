@@ -11,6 +11,8 @@
   "author": "Yusuke Kawamoto <novogrammer@gmail.com> (https://github.com/novogrammer/)",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.88.0",
+    "dotenv": "^16.0.1",
     "express": "^4.17.3",
     "fluent-ffmpeg": "^2.1.2",
     "puppeteer": "^13.6.0",
