@@ -3,12 +3,16 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
+const ffmpeg = require('fluent-ffmpeg');
 const { v4: uuidv4 } = require('uuid');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 const app = express();
 
 app.use(express.static("public"));
+
+const NUM_FRAMES = 30;
+const BUCKET = 'threejs-renderer';
 
 // app.get('/', function (req, res) {
 //   res.send('Hello World');
@@ -38,10 +42,92 @@ const s3 = new S3Client({
   }
 });
 
+const ffmpegProcess = ({
+                        uid,
+                         videoFile,
+                         videoFitBox,
+                         outputFilename = 'processed',
+                         usePublicDir = false
+                       }) => {
+  //const localDirPath = usePublicDir ? PUBLIC_DIR_PATH : LOCAL_STORAGE;
+  // const outputFileFiltered = path.resolve(__dirname, localDirPath, `${outputFilename}_filtered.mp4`);
+  // const outputFileResized = path.resolve(__dirname, localDirPath, `${outputFilename}_resized.mp4`);
+  // const outputFileAudio = path.resolve(__dirname, localDirPath, `${outputFilename}_audio.mp3`);
+
+  //const minDimension = Math.min(videoFitBox.width, videoFitBox.height);
+
+  let startDateTime;
+  let endDateTime;
+
+  return new Promise((res, rej) => {
+    const onStart = (commandLine) => {
+      startDateTime = new Date();
+      // console.info('Spawned FFmpeg with command: ' + commandLine);
+      // console.info('Start ffmpegProcess:', videoFile);
+      console.info('FFMPEG_PROCESS starting');
+    };
+    const onError = (err) => {
+      console.info('FFMPEG_PROCESS error', err);
+      rej(err);
+    };
+    const onEnd = () => {
+      endDateTime = new Date();
+      const secondsDuration = (endDateTime.getTime() - startDateTime.getTime()) / 1000;
+      // console.info('End ffmpegProcess:', outputFileFiltered);
+      console.info('End ffmpegProcess\nTotal processing time (seconds):', secondsDuration);
+      //res({resized: outputFileResized, filtered: outputFileFiltered, audio: outputFileAudio});
+      res();
+    };
+    const onProgress = progress => console.info(`FFMPEG_PROCESS progress: ${videoFile}: ${progress.timemark}`);
+
+    const filesPath = path.resolve(__dirname, `./tmp/${uid}/file%03d.png`);
+
+    const ffmpegRef = ffmpeg({source: filesPath})
+      .on('start', onStart)
+      .on('error', onError)
+      .on('end', onEnd)
+      .on('progress', onProgress)
+      //.input(videoFile)
+      //.setStartTime(videoStartOffset);
+
+    ffmpegRef
+      .withFpsInput(24)
+      .withFpsOutput(24)
+      .withVideoCodec('libx264')
+      .toFormat('mp4')
+      .withSize('1280x720')
+      .saveToFile(path.resolve(__dirname, `./public/${uid}.mp4`));
+
+    // Add more inputs if applying filters
+    // ffmpegRef
+    //   .input(path.resolve(__dirname, '../assets/vig-lines.jpg')).loop()
+    //   .input(path.resolve(__dirname, '../assets/bg.png'))
+    //   .input(path.resolve(__dirname, '../assets/midnight-sky-logo-scaled.png'));
+
+    // ffmpegRef
+    //   .complexFilter(filters)
+    //   .output(outputFileResized)
+    //   .outputOptions([ '-map [resized-out]', '-map 0:a', '-threads 0' ])
+    //   .videoCodec('libx264')
+    //   .audioCodec('aac')
+    //   .audioBitrate('320')
+    //   .output(outputFileFiltered)
+    //   .outputOptions([ '-map [out]', '-map 0:a', '-threads 0' ])
+    //   .videoCodec('libx264')
+    //   .audioCodec('aac')
+    //   .audioBitrate('320')
+    //   .output(outputFileAudio)
+    //   .outputOptions([ '-map 0:a', '-threads 0' ])
+    //   .audioCodec('libmp3lame')
+    //   .audioBitrate('320')
+    //   .run();
+  });
+};
+
 // Uploads the specified file to the chosen path.
 const uploadFile = async (filename, content) => {
   const bucketParams = {
-    Bucket: "threejs-renderer",
+    Bucket: BUCKET,
     Key: filename,
     Body: content,
     ContentType: 'image/png',
@@ -83,7 +169,7 @@ async function main() {
     args,
     headless: true,
     dumpio: true,
-    defaultViewport: { width: 400, height: 300 },
+    defaultViewport: { width: 1280, height: 720 },
   });
 
 
@@ -100,23 +186,26 @@ async function main() {
 
     const results = await page.evaluate(async ()=>{
       await window.app.setupPromise;
-      const res = window.app.drawFrames(5);
+      const res = window.app.drawFrames(60);
       return res;
     });
     await page.close();
 
-    // const dirPath = `./public/output/${uid}`;
-    // const resolvedDirPath = path.resolve(__dirname, dirPath);
-    // fs.mkdirSync(resolvedDirPath, { recursive: true });
+    const dirPath = `./tmp/${uid}`;
+    const resolvedDirPath = path.resolve(__dirname, dirPath);
+    fs.mkdirSync(resolvedDirPath, { recursive: true });
 
     const filePaths = results.map((result, i) => {
       const bufData = bufferDataFromBase64(result);
       const filename = `file${padNum(i, 3)}.png`;
-      const filePath = `output/${uid}/${filename}`;
-      fs.writeFileSync(path.resolve(__dirname, './public/test.png'), bufData);
-      uploadFile(filePath, bufData);
-      return filePath;
+      const filePath = `${dirPath}/${filename}`;
+      const resolvedFilePath = path.resolve(__dirname, filePath);
+      fs.writeFileSync(resolvedFilePath, bufData);
+      // uploadFile(filePath, bufData);
+      return resolvedFilePath;
     });
+
+    await ffmpegProcess({uid: uid});
 
     // const bufDataArr = results.map((result, i) => {
     //   const bufData = bufferDataFromBase64(result);
@@ -131,7 +220,7 @@ async function main() {
     // });
     // res.end(bufDataArr[0]);
 
-    res.json({ok: true, uid: uid, url: `https://threejs-renderer.nyc3.digitaloceanspaces.com/output/${uid}/file000.png`});
+    res.json({ok: true, uid: uid, url: `https://threejs-renderer.nyc3.digitaloceanspaces.com/output/${uid}/file000.png`, video: `/output/${uid}.mp4` });
 
   });
   console.log(`begin ${API_CAPTURE_URL}`);

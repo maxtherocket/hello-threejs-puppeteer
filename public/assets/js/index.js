@@ -2,8 +2,8 @@ import * as THREE from 'three';
 
 import { GLTFLoader } from "https://unpkg.com/three@0.139.2/examples/jsm/loaders/GLTFLoader.js"
 
-const WIDTH = 640;
-const HEIGHT = 480;
+const WIDTH = 1280;
+const HEIGHT = 720;
 
 function bufferDataFromBase64() {
   const regex = /^data:.+\/(.+);base64,(.*)$/;

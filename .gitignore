@@ -2,3 +2,6 @@ node_modules
 output
 .idea
 .env
+tmp/**
+public/tmp/**
+public/output/**
