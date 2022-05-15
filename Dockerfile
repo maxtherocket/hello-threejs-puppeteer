@@ -13,6 +13,12 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
 
 WORKDIR /app
 
+ARG SPACES_KEY=unspecified
+ENV SPACES_KEY=${SPACES_KEY}
+
+ARG SPACES_SECRET=unspecified
+ENV SPACES_SECRET=${SPACES_SECRET}
+
 COPY package*.json ./
 
 RUN npm install
