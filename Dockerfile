@@ -1,6 +1,7 @@
 FROM node:18.0.0-bullseye
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    ffmpeg \
     xorg \
     xserver-xorg \
     xvfb \

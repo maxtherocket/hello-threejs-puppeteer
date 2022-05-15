@@ -1,10 +1,8 @@
 const express = require('express');
-// import express from "express";
-
+const fs = require('fs');
+const path = require('path');
 const puppeteer = require('puppeteer');
-// import puppeteer from "puppeteer";
-
-
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 
@@ -14,10 +12,19 @@ app.use(express.static("public"));
 //   res.send('Hello World');
 // });
 
+function bufferDataFromBase64(result) {
+  const regex = /^data:.+\/(.+);base64,(.*)$/;
+  const matches = result.match(regex);
+  const data = matches[2];
+  const bufferData = Buffer.from(data, 'base64');
+  return bufferData;
+}
+
+function padNum(num, pad = 3){
+  return String(num).padStart(pad, '0'); // '0009'
+}
 
 app.listen(3000);
-
-
 
 async function main() {
   const url = "http://localhost:3000/";
@@ -50,17 +57,37 @@ async function main() {
     const page = await browser.newPage();
 
     await page.goto(url);
-    // await page.waitForNetworkIdle();
+    //await page.waitForNetworkIdle();
 
-    const result = await page.evaluate(async ()=>{
+    const uid = uuidv4();
+
+    const results = await page.evaluate(async ()=>{
       await window.app.setupPromise;
-      return window.app.draw();
+      const res = window.app.drawFrames(100);
+      return res;
     });
     await page.close();
 
-    console.log("result :",result);
+    const dirPath = `../public/output/${uid}`;
+    fs.mkdirSync(dirPath, { recursive: true });
 
-    res.json({result});
+    const filePaths = results.map((result, i) => {
+      const bufData = bufferDataFromBase64(result);
+      const filePath = path.resolve(__dirname, dirPath, `file${padNum(i, 3)}.png`);
+      fs.writeFileSync(filePath, bufData);
+      return filePath;
+    });
+
+
+
+    res.json({ok: true});
+
+
+    // res.writeHead(200, {
+    //   'Content-Type': 'image/png',
+    //   'Content-Length': img.length
+    // });
+    // res.end(img);
 
   });
   console.log(`begin ${API_CAPTURE_URL}`);

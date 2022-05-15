@@ -5,13 +5,25 @@ import { GLTFLoader } from "https://unpkg.com/three@0.139.2/examples/jsm/loaders
 const WIDTH = 640;
 const HEIGHT = 480;
 
+function bufferDataFromBase64() {
+  const regex = /^data:.+\/(.+);base64,(.*)$/;
+  const matches = result.match(regex);
+  const data = matches[2];
+  const bufferData = Buffer.from(data, 'base64');
+  return bufferData;
+}
+
+function rafPromise(){
+  return new Promise(requestAnimationFrame);
+}
+
 class App {
   constructor() {
     this.loadedAssets = {};
-    this.setupPromise=new Promise((resolve,reject)=>{
+    this.setupPromise = new Promise((resolve,reject)=>{
       this.loadAsync().then(() => {
         this.setupThree();
-        this.setupEvents();
+        //this.setupEvents();
         resolve();
       });
     });
@@ -79,21 +91,30 @@ class App {
     this.update();
     this.draw();
   }
-  update() {
+  update(frame) {
     const { cube } = this.three;
     const time = performance.now() / 1000;
-    cube.rotation.x = time;
-    cube.rotation.y = time;
+    cube.rotation.x = frame * 0.1;
+    cube.rotation.y = frame * 0.1;
   }
-  draw() {
+  draw(frame) {
+    this.update(frame);
     const { renderer, scene, camera } = this.three;
     renderer.render(scene, camera);
-    const result=renderer.domElement.toDataURL();
+    const result = renderer.domElement.toDataURL();
     if (!this.result) {
       this.result = result;
       console.log(this.result);
     }
     return result;
+  }
+  drawFrames(num=1){
+    const framesData = []
+    for (let i = 0; i < num; i++) {
+      framesData.push(this.draw(i))
+      //await rafPromise();
+    }
+    return framesData;
   }
   async loadTextureAsync(url, name) {
     const texture = await new Promise((resolve, reject) => {
