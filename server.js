@@ -63,32 +63,35 @@ async function main() {
 
     const results = await page.evaluate(async ()=>{
       await window.app.setupPromise;
-      const res = window.app.drawFrames(100);
+      const res = window.app.drawFrames(1);
       return res;
     });
     await page.close();
 
-    const dirPath = `./public/output/${uid}`;
-    const resolvedDirPath = path.resolve(__dirname, dirPath);
-    fs.mkdirSync(resolvedDirPath, { recursive: true });
+    // const dirPath = `./public/output/${uid}`;
+    // const resolvedDirPath = path.resolve(__dirname, dirPath);
+    // fs.mkdirSync(resolvedDirPath, { recursive: true });
 
-    const filePaths = results.map((result, i) => {
+    // const filePaths = results.map((result, i) => {
+    //   const bufData = bufferDataFromBase64(result);
+    //   const filePath = path.resolve(__dirname, dirPath, `file${padNum(i, 3)}.png`);
+    //   fs.writeFileSync(filePath, bufData);
+    //   return filePath;
+    // });
+
+    const bufDataArr = results.map((result, i) => {
       const bufData = bufferDataFromBase64(result);
-      const filePath = path.resolve(__dirname, dirPath, `file${padNum(i, 3)}.png`);
-      fs.writeFileSync(filePath, bufData);
-      return filePath;
+      return bufData;
     });
 
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Content-Length': bufDataArr[0].length
+    });
+    res.end(bufDataArr[0]);
 
 
-    res.json({ok: true, uid: uid, url: `${url}output/${uid}/file000.png`});
-
-
-    // res.writeHead(200, {
-    //   'Content-Type': 'image/png',
-    //   'Content-Length': img.length
-    // });
-    // res.end(img);
+    //res.json({ok: true, uid: uid, url: `${url}output/${uid}/file000.png`});
 
   });
   console.log(`begin ${API_CAPTURE_URL}`);
