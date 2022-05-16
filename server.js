@@ -184,10 +184,6 @@ async function main() {
     defaultViewport: { width: 720, height: 1280 },
   });
 
-
-
-  // process.kill(process.pid, "SIGINT");
-
   app.get(API_CAPTURE_URL, cors(), async (req, res)=>{
     req.setTimeout(500000);
 
@@ -202,8 +198,14 @@ async function main() {
 
     console.info('paramsString:', paramsString);
 
-    await page.goto(`${url}?${paramsString}`);
+    const pageURL = `${url}?${paramsString}`;
+    console.info('pageURL:', pageURL);
+
+    await page.goto(pageURL);
     await page.waitForNetworkIdle();
+    await page.waitForFunction(
+      'window.drawFrames',
+    );
 
     const uid = uuidv4();
 

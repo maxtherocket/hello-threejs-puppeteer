@@ -14,8 +14,11 @@ const tempColor = new THREE.Color()
 const colors = new Array(1000).fill().map(() => niceColors[17][Math.floor(Math.random() * 5)])
 
 const GENERATE_URL = import.meta.env.PROD ? '/api/capture' : 'http://localhost:3000/api/capture'
+const RENDER_MODE = !!urlParams.get('render');
 
 export default function App() {
+
+  const frameloop = RENDER_MODE ? 'demand' : 'always';
 
   const [bgColor, bgColorSet] = useState(urlParams.get('bg') || '#ebb9b9');
   const bgColorRef = useRef(bgColor);
@@ -67,7 +70,7 @@ export default function App() {
     <div className="canvas-container">
       <Canvas
         id="main-canvas"
-        frameloop="demand"
+        frameloop={frameloop}
         gl={{ antialias: false, alpha: false }}
         camera={{ position: [0, 0, 20], near: 5, far: 100 }}
       >
