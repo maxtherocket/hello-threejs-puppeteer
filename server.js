@@ -65,6 +65,10 @@ const ffmpegProcess = ({
   let endDateTime;
 
   return new Promise((res, rej) => {
+
+    const filename = `${uid}.mp4`;
+    const outputFile = path.resolve(__dirname, `./tmp/${filename}`);
+
     const onStart = (commandLine) => {
       startDateTime = new Date();
       // console.info('Spawned FFmpeg with command: ' + commandLine);
@@ -80,12 +84,11 @@ const ffmpegProcess = ({
       const secondsDuration = (endDateTime.getTime() - startDateTime.getTime()) / 1000;
       // console.info('End ffmpegProcess:', outputFileFiltered);
       console.info('End ffmpegProcess\nTotal processing time (seconds):', secondsDuration);
-      //res({resized: outputFileResized, filtered: outputFileFiltered, audio: outputFileAudio});
-      res();
+      res({outputFile, uid, filename });
     };
     const onProgress = progress => console.info(`FFMPEG_PROCESS progress: ${videoFile}: ${progress.timemark}`);
 
-    const filesPath = path.resolve(__dirname, `./tmp/${uid}/file%03d.png`);
+    const filesPath = path.resolve(__dirname, `./tmp/${uid}/file%04d.png`);
 
     const ffmpegRef = ffmpeg({source: filesPath})
       .on('start', onStart)
@@ -101,7 +104,7 @@ const ffmpegProcess = ({
       .withVideoCodec('libx264')
       .toFormat('mp4')
       .withSize('720x1280')
-      .saveToFile(path.resolve(__dirname, `./public/output/${uid}.mp4`));
+      .saveToFile(outputFile);
 
     // Add more inputs if applying filters
     // ffmpegRef
@@ -135,7 +138,7 @@ const uploadFile = async (filename, content) => {
     Bucket: BUCKET,
     Key: filename,
     Body: content,
-    ContentType: 'image/png',
+    //ContentType: 'image/png',
     ACL: 'public-read'
   };
   try {
@@ -209,7 +212,7 @@ async function main() {
       const bufData = bufferDataFromBase64(result);
       const bufferDataFromBase64Time = perf.stop();
       console.info('bufferDataFromBase64:', bufferDataFromBase64Time);
-      const filename = `file${padNum(i, 3)}.png`;
+      const filename = `file${padNum(i, 4)}.png`;
       const filePath = `${dirPath}/${filename}`;
       const resolvedFilePath = path.resolve(__dirname, filePath);
       perf.start();
@@ -220,14 +223,15 @@ async function main() {
       return resolvedFilePath;
     });
 
-    await ffmpegProcess({uid: uid});
+    const ffmpegResult = await ffmpegProcess({uid: uid});
 
     // const bufDataArr = results.map((result, i) => {
     //   const bufData = bufferDataFromBase64(result);
     //   return bufData;
     // });
     //
-    // await uploadFile('test.png', bufDataArr[0]);
+    const videoFileData = fs.readFileSync(ffmpegResult.outputFile);
+    await uploadFile(ffmpegResult.filename, videoFileData);
     //
     // res.writeHead(200, {
     //   'Content-Type': 'image/png',
@@ -235,7 +239,11 @@ async function main() {
     // });
     // res.end(bufDataArr[0]);
 
-    res.json({ok: true, uid: uid, url: `https://threejs-renderer.nyc3.digitaloceanspaces.com/output/${uid}/file000.png`, video: `/output/${uid}.mp4` });
+    res.json({
+      ok: true,
+      uid: uid,
+      video: `https://threejs-renderer.nyc3.digitaloceanspaces.com/${ffmpegResult.filename}`
+    });
 
   });
   console.log(`begin ${API_CAPTURE_URL}`);

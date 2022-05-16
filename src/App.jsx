@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { OrbitControls, TorusKnot } from '@react-three/drei'
 import { Canvas, useFrame, invalidate, useThree } from '@react-three/fiber'
+import {Pane} from 'tweakpane';
 import '../src/style/index.scss';
 
 export default function App() {
@@ -20,15 +21,18 @@ function Thing() {
   useFrame(() => {
     return null;
   });
+
   const {gl: renderer, scene, camera} = useThree();
   useEffect(() => {
+
+    const tweak = new Pane();
+
     const draw = window.draw = (frameNum) => {
       ref.current.rotation.y += frameNum * 0.01;
       console.log('RENDER');
       renderer.render(scene, camera);
       invalidate();
       const result = renderer.domElement.toDataURL();
-      console.info('result:', result);
       return result;
     }
     window.drawFrames = (num=1) => {
