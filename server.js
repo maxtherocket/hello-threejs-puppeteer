@@ -3,16 +3,18 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
+const queryString = require('query-string');
 const ffmpeg = require('fluent-ffmpeg');
 const { v4: uuidv4 } = require('uuid');
 const perf = require('execution-time')();
+const cors = require('cors');
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 const app = express();
 
 app.use(express.static("dist"));
 
-const NUM_FRAMES = 30;
+const NUM_FRAMES = 24*5;
 const SERVER_PORT = 3000;
 const FE_PORT = 3001;
 const BUCKET = 'threejs-renderer';
@@ -90,7 +92,7 @@ const ffmpegProcess = ({
 
     const filesPath = path.resolve(__dirname, `./tmp/${uid}/file%04d.png`);
 
-    const ffmpegRef = ffmpeg({source: filesPath})
+    const ffmpegRef = ffmpeg({source: filesPath}).loop()
       .on('start', onStart)
       .on('error', onError)
       .on('end', onEnd)
@@ -99,9 +101,11 @@ const ffmpegProcess = ({
       //.setStartTime(videoStartOffset);
 
     ffmpegRef
+      .duration(10)
       .withFpsInput(24)
       .withFpsOutput(24)
       .withVideoCodec('libx264')
+      .addInput(path.resolve(__dirname, './src/assets/song1.mp3'))
       .toFormat('mp4')
       .withSize('720x1280')
       .saveToFile(outputFile);
@@ -184,10 +188,21 @@ async function main() {
 
   // process.kill(process.pid, "SIGINT");
 
-  app.get(API_CAPTURE_URL, async (req,res)=>{
+  app.get(API_CAPTURE_URL, cors(), async (req, res)=>{
+    req.setTimeout(500000);
+
     const page = await browser.newPage();
 
-    await page.goto(url);
+    const params = {
+      bg: req.query.bg,
+      render: true
+    }
+
+    const paramsString = queryString.stringify(params);
+
+    console.info('paramsString:', paramsString);
+
+    await page.goto(`${url}?${paramsString}`);
     await page.waitForNetworkIdle();
 
     const uid = uuidv4();
