@@ -35,6 +35,4 @@ USER node
 
 EXPOSE 3000
 
-CMD [ "echo", "$SPACES_KEY" ]
-
-CMD npm run start
+CMD npm run build && npm run start

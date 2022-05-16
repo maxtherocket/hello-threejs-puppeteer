@@ -5,3 +5,7 @@ output
 tmp/**
 public/tmp/**
 public/output/**
+.DS_Store
+dist
+dist-ssr
+*.local

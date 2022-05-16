@@ -5,18 +5,22 @@ const path = require('path');
 const puppeteer = require('puppeteer');
 const ffmpeg = require('fluent-ffmpeg');
 const { v4: uuidv4 } = require('uuid');
+const perf = require('execution-time')();
 const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
 
 const app = express();
 
-app.use(express.static("public"));
+app.use(express.static("dist"));
 
 const NUM_FRAMES = 30;
+const SERVER_PORT = 3000;
+const FE_PORT = 3001;
 const BUCKET = 'threejs-renderer';
+const IS_DEV = process.env.NODE_ENV !== 'production';
 
-// app.get('/', function (req, res) {
-//   res.send('Hello World');
-// });
+app.get('/', function (req, res) {
+  res.send('Hello World');
+});
 
 function bufferDataFromBase64(result) {
   const regex = /^data:.+\/(.+);base64,(.*)$/;
@@ -30,8 +34,7 @@ function padNum(num, pad = 3){
   return String(num).padStart(pad, '0'); // '0009'
 }
 
-console.info('process.env.SPACES_KEY:', process.env.SPACES_KEY);
-console.info('process.env.SPACES_SECRET:', process.env.SPACES_SECRET);
+console.info('process.env.NODE_ENV:', process.env.NODE_ENV);
 
 const s3 = new S3Client({
   endpoint: "https://nyc3.digitaloceanspaces.com",
@@ -55,6 +58,8 @@ const ffmpegProcess = ({
   // const outputFileAudio = path.resolve(__dirname, localDirPath, `${outputFilename}_audio.mp3`);
 
   //const minDimension = Math.min(videoFitBox.width, videoFitBox.height);
+
+  console.info('Initiating ffmpegProcess');
 
   let startDateTime;
   let endDateTime;
@@ -95,8 +100,8 @@ const ffmpegProcess = ({
       .withFpsOutput(24)
       .withVideoCodec('libx264')
       .toFormat('mp4')
-      .withSize('1280x720')
-      .saveToFile(path.resolve(__dirname, `./public/${uid}.mp4`));
+      .withSize('720x1280')
+      .saveToFile(path.resolve(__dirname, `./public/output/${uid}.mp4`));
 
     // Add more inputs if applying filters
     // ffmpegRef
@@ -147,11 +152,11 @@ const uploadFile = async (filename, content) => {
   }
 };
 
-app.listen(3000);
+app.listen(SERVER_PORT);
 
 async function main() {
-  const url = "http://localhost:3000/";
-  const API_CAPTURE_URL="/api/capture";
+  const url = IS_DEV ? `http://localhost:${FE_PORT}/` : `http://localhost:${SERVER_PORT}/`;
+  const API_CAPTURE_URL = `/api/capture`;
 
   const args=[
     "--no-sandbox",
@@ -169,7 +174,7 @@ async function main() {
     args,
     headless: true,
     dumpio: true,
-    defaultViewport: { width: 1280, height: 720 },
+    defaultViewport: { width: 720, height: 1280 },
   });
 
 
@@ -180,16 +185,18 @@ async function main() {
     const page = await browser.newPage();
 
     await page.goto(url);
-    //await page.waitForNetworkIdle();
+    await page.waitForNetworkIdle();
 
     const uid = uuidv4();
 
-    const results = await page.evaluate(async ()=>{
-      await window.app.setupPromise;
-      const res = window.app.drawFrames(60);
+    const results = await page.evaluate(async ({numFrames})=>{
+      //await window.app.setupPromise;
+      const res = window.drawFrames(numFrames);
       return res;
-    });
+    }, {numFrames: NUM_FRAMES});
+    console.info('Waiting for page.close()');
     await page.close();
+    console.info('page.close() complete');
 
     const dirPath = `./tmp/${uid}`;
     const resolvedDirPath = path.resolve(__dirname, dirPath);
@@ -198,11 +205,17 @@ async function main() {
     fs.mkdirSync(path.resolve('./public/output'), { recursive: true });
 
     const filePaths = results.map((result, i) => {
+      perf.start();
       const bufData = bufferDataFromBase64(result);
+      const bufferDataFromBase64Time = perf.stop();
+      console.info('bufferDataFromBase64:', bufferDataFromBase64Time);
       const filename = `file${padNum(i, 3)}.png`;
       const filePath = `${dirPath}/${filename}`;
       const resolvedFilePath = path.resolve(__dirname, filePath);
+      perf.start();
       fs.writeFileSync(resolvedFilePath, bufData);
+      const writeFileSyncTime = perf.stop();
+      console.info('writeFileSyncTime:', writeFileSyncTime);
       // uploadFile(filePath, bufData);
       return resolvedFilePath;
     });
