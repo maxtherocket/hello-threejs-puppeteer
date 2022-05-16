@@ -14,7 +14,7 @@ const app = express();
 
 app.use(express.static("dist"));
 
-const NUM_FRAMES = 24*5;
+const NUM_FRAMES = 24*3;
 const SERVER_PORT = 3000;
 const FE_PORT = 3001;
 const BUCKET = 'threejs-renderer';
@@ -101,7 +101,7 @@ const ffmpegProcess = ({
       //.setStartTime(videoStartOffset);
 
     ffmpegRef
-      .duration(10)
+      .duration(5)
       .withFpsInput(24)
       .withFpsOutput(24)
       .withVideoCodec('libx264')
