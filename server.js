@@ -105,6 +105,7 @@ const ffmpegProcess = ({
       .withFpsInput(24)
       .withFpsOutput(24)
       .withVideoCodec('libx264')
+      .outputOptions(['-pix_fmt yuv420p']) //
       .addInput(path.resolve(__dirname, './src/assets/song1.mp3'))
       .toFormat('mp4')
       .withSize('720x1280')
