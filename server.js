@@ -112,7 +112,7 @@ const ffmpegProcess = ({
       .saveToFile(outputFile);
 
     // Add more inputs if applying filters
-    // ffmpegRef
+    // ffmpegRefd
     //   .input(path.resolve(__dirname, '../assets/vig-lines.jpg')).loop()
     //   .input(path.resolve(__dirname, '../assets/bg.png'))
     //   .input(path.resolve(__dirname, '../assets/midnight-sky-logo-scaled.png'));

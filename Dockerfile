@@ -37,4 +37,6 @@ EXPOSE 3000
 
 ENV NODE_ENV production
 
-CMD npm run build && npm run start
+RUN npm run build
+
+CMD npm run start
