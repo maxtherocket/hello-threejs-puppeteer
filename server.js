@@ -212,8 +212,8 @@ async function main() {
 
     const results = await page.evaluate(async ({numFrames})=>{
       //await window.app.setupPromise;
-      const res = window.drawFrames(numFrames);
-      return res;
+      const result = window._renderFrames(numFrames);
+      return result;
     }, {numFrames: NUM_FRAMES});
     console.info('Waiting for page.close()');
     await page.close();

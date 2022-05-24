@@ -24,7 +24,7 @@ window._renderFrame = function(frameNum) {
 window._renderFrames = (num= 1) => {
   const framesData = []
   for (let i = 0; i < num; i++) {
-    framesData.push(window.renderFrame(i));
+    framesData.push(window._renderFrame(i));
   }
   return framesData;
 }
