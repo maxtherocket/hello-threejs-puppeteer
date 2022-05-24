@@ -14,11 +14,9 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
 WORKDIR /app
 
 ARG SPACES_KEY=unspecified
-RUN echo "SPACES_KEY: ${SPACES_KEY}"
 ENV SPACES_KEY=${SPACES_KEY}
 
 ARG SPACES_SECRET=unspecified
-RUN echo "SPACES_SECRET: ${SPACES_SECRET}"
 ENV SPACES_SECRET=${SPACES_SECRET}
 
 COPY package*.json ./
