@@ -10,8 +10,6 @@ import {
 } from "@react-three/postprocessing";
 import { useThree } from "@react-three/fiber";
 
-import useCubeMapPaths from "../hooks/use-cube-map-paths";
-
 import { GodRaysEffect, KernelSize, BlendFunction } from "postprocessing";
 
 import { Icosahedron, MeshDistortMaterial, useTexture, useCubeTexture } from "@react-three/drei";
@@ -21,6 +19,7 @@ import bumpMapPath from '../assets/tex/bump.jpg';
 import useAudioAnalyzer from "../hooks/use-audio-analyzer";
 import {useRenderFrame} from "../hooks/use-render-frame";
 import {CUBE_TEX_PATH} from "../settings";
+import useCubeTexturePaths from "../hooks/use-cube-texture-paths";
 
 export const GodRays = forwardRef((props, ref) => {
   const { camera } = useThree();
@@ -98,8 +97,8 @@ const Sun = forwardRef(function Sun(props, forwardRef) {
 
   const bumpMap = useTexture(bumpMapPath);
   const envMap = useCubeTexture(
-    ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
-    { path: CUBE_TEX_PATH }
+    useCubeTexturePaths(),
+    { path: '' }
   );
 
   return (

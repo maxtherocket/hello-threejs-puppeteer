@@ -9,6 +9,7 @@ import {createAnalyser} from "../../utils/audio-analyzer";
 import useAudioAnalyzer from "../../hooks/use-audio-analyzer";
 import {useCubeTexture} from "@react-three/drei";
 import {CUBE_TEX_PATH} from "../../settings";
+import useCubeTexturePaths from "../../hooks/use-cube-texture-paths";
 
 const tempObject = new THREE.Object3D()
 const tempColor = new THREE.Color()
@@ -168,8 +169,8 @@ export default function Tunnel({numItems = 50}) {
   })
 
   const envMap = useCubeTexture(
-    ["px.png", "nx.png", "py.png", "ny.png", "pz.png", "nz.png"],
-    { path: CUBE_TEX_PATH }
+    useCubeTexturePaths(),
+    { path: '' }
   );
 
   return (

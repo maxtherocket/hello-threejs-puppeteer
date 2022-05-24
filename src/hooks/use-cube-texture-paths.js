@@ -5,7 +5,7 @@ import cubeNY from '../assets/cube/ny.png';
 import cubePZ from '../assets/cube/pz.png';
 import cubeNZ from '../assets/cube/nz.png';
 
-export default function useCubeMapPaths(){
+export default function useCubeTexturePaths(){
   return [
     cubePX, cubeNX, cubePY, cubeNY, cubePZ, cubeNZ
   ]

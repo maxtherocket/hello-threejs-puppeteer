@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     port: 3001
   },
-  assetsInclude: ['**/*.gltf', '**/*.mp3', '**/*.png', '**/*.jpg'],
+  assetsInclude: ['**/*.gltf', '**/*.mp3'],
   build: {
     outDir: 'dist'
   }
