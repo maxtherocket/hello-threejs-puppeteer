@@ -16,7 +16,7 @@ const app = express();
 app.use(express.static("dist"));
 
 const NUM_FRAMES = 24*5;
-const SERVER_PORT = 3005;
+const SERVER_PORT = process.env.SERVER_PORT || 3000;
 const FE_PORT = 3006;
 const BUCKET = 'threejs-renderer';
 const IS_DEV = process.env.NODE_ENV !== 'production';
