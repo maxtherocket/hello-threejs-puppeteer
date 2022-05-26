@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+//const stream = require("stream");
 const puppeteer = require('puppeteer');
 const queryString = require('query-string');
 const ffmpeg = require('fluent-ffmpeg');
@@ -14,9 +15,9 @@ const app = express();
 
 app.use(express.static("dist"));
 
-const NUM_FRAMES = 24*3;
-const SERVER_PORT = 3000;
-const FE_PORT = 3001;
+const NUM_FRAMES = 24*5;
+const SERVER_PORT = 3005;
+const FE_PORT = 3006;
 const BUCKET = 'threejs-renderer';
 const IS_DEV = process.env.NODE_ENV !== 'production';
 
@@ -24,11 +25,12 @@ app.get('/', function (req, res) {
   res.send('Hello World');
 });
 
-function bufferDataFromBase64(result) {
-  const regex = /^data:.+\/(.+);base64,(.*)$/;
-  const matches = result.match(regex);
-  const data = matches[2];
-  const bufferData = Buffer.from(data, 'base64');
+function fileDataFromBase64(base64) {
+  return base64.split(",")[1];
+}
+
+function bufferDataFromBase64(base64) {
+  const bufferData = Buffer.from(fileDataFromBase64(base64), 'base64');
   return bufferData;
 }
 
@@ -205,13 +207,15 @@ async function main() {
     await page.goto(pageURL);
     await page.waitForNetworkIdle();
     await page.waitForFunction(
-      'window.drawFrames',
+      'window._renderSetupReady',
     );
 
     const uid = uuidv4();
 
-    const results = await page.evaluate(async ({numFrames})=>{
+    const results = await page.evaluate(({numFrames})=>{
       //await window.app.setupPromise;
+      //const result = window._renderFrames(numFrames);
+      console.info('window.devicePixelRatio:', window.devicePixelRatio);
       const result = window._renderFrames(numFrames);
       return result;
     }, {numFrames: NUM_FRAMES});
@@ -226,13 +230,19 @@ async function main() {
     fs.mkdirSync(path.resolve('./public/output'), { recursive: true });
 
     const filePaths = results.map((result, i) => {
-      perf.start();
-      const bufData = bufferDataFromBase64(result);
-      const bufferDataFromBase64Time = perf.stop();
-      console.info('bufferDataFromBase64:', bufferDataFromBase64Time);
       const filename = `file${padNum(i, 4)}.png`;
       const filePath = `${dirPath}/${filename}`;
       const resolvedFilePath = path.resolve(__dirname, filePath);
+
+      // const inputStream = new stream.Readable();
+      // inputStream.push(new Base64Decode(result))
+      //   .pipe(fs.createWriteStream(resolvedFilePath));
+
+      perf.start();
+      const bufData = bufferDataFromBase64(result);
+      const bufferDataFromBase64Time = perf.stop();
+      console.info('bufferDataFromBase64Time:', bufferDataFromBase64Time);
+
       perf.start();
       fs.writeFileSync(resolvedFilePath, bufData);
       const writeFileSyncTime = perf.stop();

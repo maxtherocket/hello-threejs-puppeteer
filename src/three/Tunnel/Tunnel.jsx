@@ -17,7 +17,7 @@ const colors = new Array(1000).fill().map(() => niceColors[5][Math.floor(Math.ra
 const NUM_FRAMES = 50;
 let tunnelItemInstanceRefs = [];
 
-export default function Tunnel({numItems = 50}) {
+export default function Tunnel({numItems = 50, cubeTex}) {
   const [hovered, set] = useState()
   const {gl: renderer, scene, camera} = useThree();
 
@@ -90,6 +90,7 @@ export default function Tunnel({numItems = 50}) {
   useRenderFrame((state, delta, elapsedTime) => {
     if (animate && analyzer) {
       const time = elapsedTime;
+      console.info('time:', time);
       //ref.current.rotation.x = Math.sin(time / 4)
       // ref.current.rotation.y = time;
       let minZ = 0;
@@ -168,11 +169,6 @@ export default function Tunnel({numItems = 50}) {
     opacity: { value: 1, min: 0, max: 1, step: 0.1 }
   })
 
-  const envMap = useCubeTexture(
-    useCubeTexturePaths(),
-    { path: '' }
-  );
-
   return (
     <>
       <instancedMesh ref={ref} args={[null, null, NUM_FRAMES]} >
@@ -181,7 +177,7 @@ export default function Tunnel({numItems = 50}) {
           <instancedBufferAttribute attach="attributes-opacity" args={[opacityArray, 1]} />
         </extrudeBufferGeometry>
         <meshPhysicalMaterial
-          envMap={envMap}
+          envMap={cubeTex}
           color={color}
           transparent={false}
           opacity={opacity}

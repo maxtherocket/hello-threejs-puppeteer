@@ -5,20 +5,26 @@ const renderFrameCallbacks = [];
 const stateDummy = {};
 
 window._renderFrame = function(frameNum) {
-  console.info('renderFrameCallbacks.length:', renderFrameCallbacks.length, frameNum);
-  renderFrameCallbacks.map((cb) => {
-    cb(stateDummy, 16, frameNum*0.016)
+  console.info('renderFrameCallbacks.length:', renderFrameCallbacks.length, `frameNum: ${frameNum}`);
+  renderFrameCallbacks.map((cb, i) => {
+    cb(stateDummy, 0.016, frameNum*0.016);
+    console.log('Render frame callback:', i);
   });
+  console.info('window._renderer:', window._renderer);
+  let result;
   if (window._renderer){
     try {
       window._renderer.render(window._scene, window._camera);
       window._invalidate && window._invalidate();
-      return window._canvasElement.toDataURL();
+      console.log('rendered frame:', frameNum);
+      console.info('window._canvasElement:', window._canvasElement);
+      result = window._canvasElement.toDataURL();
     } catch (e) {
       console.error(e.message);
       console.error(e);
     }
   }
+  return result;
 }
 
 window._renderFrames = (num= 1) => {
@@ -41,6 +47,7 @@ export const useSetupRenderFrame = ({renderer, scene, camera, invalidate}) => {
     window._canvasElement = renderer.domElement;
     renderFrameSetupReadySet(true);
   }, []);
+  window._renderSetupReady = () => {};
   return renderFrameSetupReady;
 }
 
@@ -57,8 +64,10 @@ export const useRenderFrame = (cb, deps = []) => {
       });
     } else {
       useEffect(() => {
-        renderFrameCallbacks.push(cb);
-        console.info('renderFrameCallbacks ADD CB');
+        if (!renderFrameCallbacks.length) {
+          renderFrameCallbacks.push(cb);
+          console.info('renderFrameCallbacks ADD CB, renderFrameCallbacks.length', renderFrameCallbacks.length);
+        }
         return () => {
           const idx = renderFrameCallbacks.indexOf(cb);
           if (idx > -1) {

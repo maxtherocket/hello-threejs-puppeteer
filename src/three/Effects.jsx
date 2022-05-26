@@ -54,7 +54,7 @@ export const GodRays = forwardRef((props, ref) => {
 //   );
 // });
 
-const Sun = forwardRef(function Sun(props, forwardRef) {
+const Sun = forwardRef(function Sun({bumpMap, cubeTex}, forwardRef) {
 
   const analyzer = useAudioAnalyzer();
   const analyzerDataArray = useMemo(() => {
@@ -89,23 +89,16 @@ const Sun = forwardRef(function Sun(props, forwardRef) {
     if (analyzer && analyzerDataArray) {
       analyzer.getByteTimeDomainData(analyzerDataArray);
       const targetFFTVal = analyzerDataArray[0];
-      console.info('targetFFTVal:', targetFFTVal);
       prevFTTVal.current += (targetFFTVal - prevFTTVal.current) / 3;
       distortMaterialRef.current.distort = distort + prevFTTVal.current * 0.002;
     }
   }, []);
 
-  const bumpMap = useTexture(bumpMapPath);
-  const envMap = useCubeTexture(
-    useCubeTexturePaths(),
-    { path: '' }
-  );
-
   return (
     <Icosahedron args={[3, 30]} scale={[scale, scale, scale]} ref={forwardRef} position={[0, 0, 0]}>
       <MeshDistortMaterial
         ref={distortMaterialRef}
-        envMap={envMap}
+        envMap={cubeTex}
         bumpMap={bumpMap}
         color={color}
         emissive={color}
@@ -122,7 +115,7 @@ const Sun = forwardRef(function Sun(props, forwardRef) {
   );
 });
 
-function Effects() {
+function Effects({bumpMap, cubeTex}) {
   const [$sun, setSun] = useState();
 
   const {hue, saturation, noise} = useTweaks("Effects", {
@@ -132,19 +125,17 @@ function Effects() {
   });
 
   const {enabled} = useTweaks('Effect Composer', {
-    enabled: true
+    enabled: false
   })
 
   return (
     <Suspense fallback={null}>
-      <Select>
-        <Sun ref={setSun} />
-        <pointLight
-          color={'#fff'}
-          position={[0, 1, -10]}
-          intensity={0.3}
-        />
-      </Select>
+      <Sun bumpMap={bumpMap} cubeTex={cubeTex} ref={setSun} />
+      <pointLight
+        color={'#fff'}
+        position={[0, 1, -10]}
+        intensity={0.3}
+      />
       {$sun && (
         <EffectComposer enabled={enabled}>
           <GodRays sun={$sun} />

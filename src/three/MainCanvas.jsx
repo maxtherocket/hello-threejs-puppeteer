@@ -1,4 +1,5 @@
 import {useEffect, useLayoutEffect, useRef, useState} from "react";
+import * as THREE from "three";
 import urlParams from "../utils/url-params";
 import {Pane} from "tweakpane";
 import queryString from "query-string";
@@ -13,6 +14,27 @@ import {useTweaks} from "use-tweaks/src/useTweaks";
 import Tunnel from "./Tunnel/Tunnel";
 import Lights from "./Lights";
 import Effects from "./Effects";
+
+import assetBump from '../assets/tex/bump.jpg';
+import usePreloadThreeAssets from "../hooks/use-preload-three-assets";
+import useCubeTexturePaths from "../hooks/use-cube-texture-paths";
+
+THREE.DefaultLoadingManager.onStart = function ( url, itemsLoaded, itemsTotal ) {
+  console.log( 'Started loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+};
+
+THREE.DefaultLoadingManager.onLoad = function ( ) {
+  console.log( 'Loading Complete!');
+};
+
+
+THREE.DefaultLoadingManager.onProgress = function ( url, itemsLoaded, itemsTotal ) {
+  console.log( 'Loading file: ' + url + '.\nLoaded ' + itemsLoaded + ' of ' + itemsTotal + ' files.' );
+};
+
+THREE.DefaultLoadingManager.onError = function ( url ) {
+  console.log( 'There was an error loading ' + url );
+};
 
 export default function MainCanvas() {
 
@@ -91,6 +113,14 @@ export default function MainCanvas() {
     camPosZ: {value: -30, min: -50, max: 10},
   })
 
+  const {complete: assetPreloadComplete, assets: preloadedAssets} = usePreloadThreeAssets([
+    {id: 'bump', url: assetBump, type: 'texture'},
+    {id: 'cube', url: useCubeTexturePaths(), type: 'cube'}
+  ])
+
+  console.info('assetPreloadComplete:', assetPreloadComplete);
+  console.info('preloadedAssets:', preloadedAssets);
+
   return (
     <Canvas
       id="main-canvas"
@@ -98,23 +128,25 @@ export default function MainCanvas() {
       gl={{ antialias: false, alpha: false }}
       onClick={onClick}
     >
-      {/*<color attach="background" args={[bgColor]} />*/}
-      <GradientTexture attach="background" stops={[0, 1]} colors={[col1, col2]} size={100} />
-      <PerspectiveCamera
-        makeDefault
-        position={[camPosX, camPosY, camPosZ]}
-        near={1}
-        far={2000}
-        />
-      <OrbitControls />
-      {/*<Particles />*/}
-      <Selection>
-        <Lights />
-        <Tunnel />
-        <Effects />
-      </Selection>
-      <Environment background={false} preset={'studio'} />
-      <SetupRenderMode />
+      { assetPreloadComplete &&
+        <>
+          {/*<GradientTexture attach="background" stops={[0, 1]} colors={[col1, col2]} size={100} />*/}
+          <PerspectiveCamera
+            makeDefault
+            position={[camPosX, camPosY, camPosZ]}
+            near={1}
+            far={2000}
+            />
+          <OrbitControls />
+          {/*<Particles />*/}
+          <Selection>
+            <Lights />
+            <Tunnel cubeTex={preloadedAssets['cube']} />
+            {/*<Effects cubeTex={preloadedAssets['cube']} bumpMap={preloadedAssets['bump']} />*/}
+          </Selection>
+          <SetupRenderMode />
+        </>
+      }
     </Canvas>
   )
 }
