@@ -142,7 +142,7 @@ export default function MainCanvas() {
           <Selection>
             <Lights />
             <Tunnel cubeTex={preloadedAssets['cube']} />
-            {/*<Effects cubeTex={preloadedAssets['cube']} bumpMap={preloadedAssets['bump']} />*/}
+            <Effects cubeTex={preloadedAssets['cube']} bumpMap={preloadedAssets['bump']} />
           </Selection>
           <SetupRenderMode />
         </>

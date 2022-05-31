@@ -125,7 +125,7 @@ function Effects({bumpMap, cubeTex}) {
   });
 
   const {enabled} = useTweaks('Effect Composer', {
-    enabled: false
+    enabled: true
   })
 
   return (
