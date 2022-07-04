@@ -140,7 +140,7 @@ export default function MainCanvas() {
           <OrbitControls />
           {/*<Particles />*/}
           <Selection>
-            <Lights />
+            {/*<Lights />*/}
             <Tunnel cubeTex={preloadedAssets['cube']} />
             <Effects cubeTex={preloadedAssets['cube']} bumpMap={preloadedAssets['bump']} />
           </Selection>

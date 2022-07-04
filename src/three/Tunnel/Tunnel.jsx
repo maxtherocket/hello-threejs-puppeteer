@@ -90,7 +90,7 @@ export default function Tunnel({numItems = 50, cubeTex}) {
   useRenderFrame((state, delta, elapsedTime) => {
     if (animate && analyzer) {
       const time = elapsedTime;
-      console.info('time:', time);
+      // console.info('time:', time);
       //ref.current.rotation.x = Math.sin(time / 4)
       // ref.current.rotation.y = time;
       let minZ = 0;

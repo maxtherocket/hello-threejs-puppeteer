@@ -15,7 +15,7 @@ const app = express();
 
 app.use(express.static("dist"));
 
-const NUM_FRAMES = 24*3;
+const NUM_FRAMES = 10;
 const SERVER_PORT = process.env.SERVER_PORT || 3000;
 const FE_PORT = 3006;
 const BUCKET = 'threejs-renderer';
@@ -165,7 +165,8 @@ const uploadFile = async (filename, content) => {
 app.listen(SERVER_PORT);
 
 async function main() {
-  const url = IS_DEV ? `http://localhost:${FE_PORT}/` : `http://localhost:${SERVER_PORT}/`;
+  //const url = IS_DEV ? `http://localhost:${FE_PORT}/` : `http://localhost:${SERVER_PORT}/`;
+  const url = `${process.env.FRONTEND_APP_URL}`;
   const API_CAPTURE_URL = `/api/capture`;
 
   const args=[
@@ -209,6 +210,7 @@ async function main() {
     await page.waitForFunction(
       'window._renderSetupReady',
     );
+    await page.waitForTimeout(3000);
 
     const uid = uuidv4();
 
